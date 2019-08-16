@@ -7,8 +7,8 @@ dta=purrr::map(list_files,function(lf){
 }
 )
 names_data=stringr::str_remove(list_files,".csv")
-targets=c("Class","class","Num",
-          "class","live","class","class","Outcome")
+targets=c("Class","class","class",
+          "Num","live","class","class","Outcome")
 targets_class=purrr::map(seq_along(targets),function(i){
   dta[[i]]%>%count(.dots=targets[i])
 })
@@ -62,12 +62,12 @@ library(SuperLearner)
 source("SL_mlr.R")
 source("new_metalearner.R")
 source("SL_Adds_on.R")
-
+source("r_mcs.R")
 
 #============================== Base Learner =====================================
 source("base_learner.R")
 
-getMlrOptions()
+#getMlrOptions()
 configureMlr(show.learner.output = FALSE, show.info = FALSE)
 
 
@@ -176,6 +176,7 @@ opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
 
 }
 
+result_SL2(1)
 
 fin_resSL1=data.frame(name=names_data_fix,accuracy=
                         purrr::map_dbl(result_SL1,function(i) i$final_prediction))
