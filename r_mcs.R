@@ -102,7 +102,8 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
   
   #====================================Get Cuckoo egg==============================
   
-  cuckoo_egg=function(x_cont,x_disc,x_bin,bnd_cont,bnd_disc,bnd_bin,seed){
+  cuckoo_egg=function(x_cont,x_disc,x_bin,
+                      bnd_cont,bnd_disc,bnd_bin,seed){
     
     x0_disc=disc_trans(x_disc,seed)
     x0_bin=binary_trans(x_bin,seed)
@@ -170,28 +171,68 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     disc_x_new[replace_egg,]=disc_x_cuckoo[replace_egg,]
     bin_x_new[replace_egg,]=bin_x_cuckoo[replace_egg,]
     
-    x_new_all=list(cont_x_new,disc_x_new,bin_x_new)
+    x_new_all=list("cont"=cont_x_new,"disc"=disc_x_new,"bin"=bin_x_new)
     return(x_new_all)
     
   }
   
   #====================================Empty Nest==============================
-  empty_nest=function(x_cont,x_disc,x_bin,pa,bnd_cont,bnd_disc,bnd_bin){
-    x_new=cbind(x_cont,x_disc,x_bin)
-    epsilon=purrr::map_dfc(seq(ncol(x_new)),~runif(nrow(x_new)))
-    crit=epsilon>pa
+  empty_nest=function(x_cont,x_disc,x_bin,pa,
+                      bnd_cont,bnd_disc,bnd_bin){
+    #x_new=cbind(x_cont,x_disc,x_bin)
+    #epsilon=purrr::map_dfc(seq(ncol(x_new)),~runif(nrow(x_new)))
+    #crit=epsilon>pa
     
-    H=fBasics::Heaviside(pa-epsilon)
-    x_newest=x_new+alpha*levy_flight(n,d,Beta = Beta)*H*
-      (x_new[sample.int(length(x_new))]-x_new[sample.int(length(x_new))])*crit
+    #H=fBasics::Heaviside(pa-epsilon)
+    #Continous New
+    epsilon_cont=purrr::map_dfc(seq(ncol(x_cont)),
+                                ~runif(nrow(x_cont)))
+    crit_cont=epsilon_cont>pa
+    H_cont=fBasics::Heaviside(pa-epsilon_cont)
     
-    ncol_cont=seq(ncol(x_cont))
-    ncol_disc=seq((ncol(x_cont)+1),(ncol(x_cont)+ncol(x_disc)))
-    ncol_bin=setdiff(ncol(x_newest),c(ncol_cont,ncol_disc))
+    x_newest_cont=x_cont+alpha*levy_flight(n,cont_d,Beta = Beta)*H_cont*
+      (x_cont[sample.int(length(x_cont))]-
+         x_cont[sample.int(length(x_cont))])*crit_cont
     
-    x_newest_cont=limit_bound(x_newest[,ncol_cont],bnd_cont)
-    x_newest_disc=limit_bound(x_newest[,ncol_disc],bnd_disc)
-    x_newest_bin=limit_bound(x_newest[,ncol_bin],bnd_bin)
+    x_newest_cont=limit_bound(x_newest_cont,bnd_cont)
+    
+    #Discrete new
+    epsilon_disc=purrr::map_dfc(seq(ncol(x_disc)),
+                                ~runif(nrow(x_disc)))
+    crit_disc=epsilon_disc>pa
+    H_disc=fBasics::Heaviside(pa-epsilon_disc)
+    
+    x_newest_disc=x_disc+alpha*levy_flight(n,disc_d,Beta = Beta)*H_disc*
+      (x_disc[sample.int(length(x_disc))]-
+         x_disc[sample.int(length(x_disc))])*crit_disc
+    
+    x_newest_disc=limit_bound(x_newest_disc,bnd_disc)
+    
+    #Binary new
+    epsilon_bin=purrr::map_dfc(seq(ncol(x_bin)),
+                                ~runif(nrow(x_bin)))
+    crit_bin=epsilon_bin>pa
+    H_bin=fBasics::Heaviside(pa-epsilon_bin)
+    
+    x_newest_bin=x_bin+alpha*levy_flight(n,bin_d,Beta = Beta)*H_bin*
+      (x_bin[sample.int(length(x_bin))]-
+         x_bin[sample.int(length(x_bin))])*crit_bin
+  
+      x_newest_bin=limit_bound(x_newest_bin,bnd_bin)
+    
+    
+    
+    
+#    x_newest=x_new+alpha*levy_flight(n,d,Beta = Beta)*H*
+#      (x_new[sample.int(length(x_new))]-x_new[sample.int(length(x_new))])*crit
+    
+#    ncol_cont=seq(ncol(x_cont))
+#    ncol_disc=seq((ncol(x_cont)+1),(ncol(x_cont)+ncol(x_disc)))
+#    ncol_bin=setdiff(ncol(x_newest),c(ncol_cont,ncol_disc))
+    
+#    x_newest_cont=limit_bound(x_newest[,ncol_cont],bnd_cont)
+#    x_newest_disc=limit_bound(x_newest[,ncol_disc],bnd_disc)
+#    x_newest_bin=limit_bound(x_newest[,ncol_bin],bnd_bin)
     
     x_newest=list("cont"=x_newest_cont,"disc"=x_newest_disc,"bin"=x_newes_bin)
     return(x_newest)
@@ -258,7 +299,8 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     
     #Discovery by host bird: abandon nest and build new one
     x_newest=empty_nest(x_new$cont,x_new$disc,x_new$bin,pa,
-                        cont_bnd,disc_bnd,bin_bnd)
+                        cont_bnd,disc_bnd,bin_bnd
+                        )
     x_newest_all=cbind(x_newest$cont,x_newest$disc,x_newest$bin)
     newest_fit=fitness(x_newest$cont,x_newest$disc,x_newest$bin,fun)
     
