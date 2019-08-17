@@ -44,8 +44,7 @@ method_NNRidge=function()
                                             nfolds = 10)
                 #fit_ls <- cons_ridge(sqrt(obsWeights) * Z, sqrt(obsWeights) * Y)
                 if (verbose) {
-                  message(paste("Non Negative Ridge convergence:", 
-                                fit_ls$status == "optimal"))
+                  message(paste("Non Negative Ridge convergence:"))
                 }
                 #coef1 <- fit_ls$solution
                 coef1 <- as.numeric(coef.cv.glmnet(fit_ls))[-1]
