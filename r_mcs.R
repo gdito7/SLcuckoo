@@ -234,7 +234,7 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
 #    x_newest_disc=limit_bound(x_newest[,ncol_disc],bnd_disc)
 #    x_newest_bin=limit_bound(x_newest[,ncol_bin],bnd_bin)
     
-    x_newest=list("cont"=x_newest_cont,"disc"=x_newest_disc,"bin"=x_newes_bin)
+    x_newest=list("cont"=x_newest_cont,"disc"=x_newest_disc,"bin"=x_newest_bin)
     return(x_newest)
   }
   
@@ -282,7 +282,7 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
   disc_x_host=egg(n,disc_bnd)
   bin_x_host=egg(n,bin_bnd)
   
-  browser()
+#  browser()
   #====================================Main Program==============================
   cat("=================Starting iteration=============== \n")
   for(i in seq(iter_max)){
