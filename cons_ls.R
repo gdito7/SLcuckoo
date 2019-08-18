@@ -19,7 +19,7 @@ cons_ls=function(X,Y,lower=0,upper=Inf,total=1,solver="ECOS"){
   problem = Problem(Minimize(obj),constraints = cons_all )
   result = solve(problem,solver=solver)
   solution=tryCatch(result$getValue(betavar)[,1] %>% round(3),
-                    error=function(e) result$getValue(betavar)[,1] %>% round(3))
+                    error=function(e) result$getValue(betavar)[1] %>% round(3))
   return(list("solution"=solution,
               "status"=result$status,"solver"=result$solver))
 }

@@ -178,7 +178,7 @@ r_cs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
                   magrittr::extract(which.max(newest_fit)),
                 "best_solution"=x_newest%>%slice(which.max(newest_fit)))
       
-      temp_res=list("x_host"=x_host,"best"=best,"iteration"=i)
+      temp_res=list("x_host"=x_newest,"best"=best,"iteration"=i)
       
       all_res[[i]]=list("temp_rest"=temp_res,"all_fit"=newest_fit_all)
     }else{
@@ -189,7 +189,7 @@ r_cs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
                   magrittr::extract(which.max(newest_fit)),
                 "best_solution"=x_newest%>%slice(which.max(newest_fit)))
       
-      temp_res=list("x_host"=x_host,"best"=best,"iteration"=i)
+      temp_res=list("x_host"=x_newest,"best"=best,"iteration"=i)
       
       all_res[[i]]=temp_res
     }

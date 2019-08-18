@@ -194,7 +194,7 @@ for(i in seq(rcs_files$iteration+1,iter_max)){
                 magrittr::extract(which.max(newest_fit)),
               "best_solution"=x_newest%>%slice(which.max(newest_fit)))
     
-    temp_res=list("x_host"=x_host,"best"=best,"iteration"=i)
+    temp_res=list("x_host"=x_newest,"best"=best,"iteration"=i)
     
     all_res[[i]]=temp_res
   }
