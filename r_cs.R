@@ -146,7 +146,7 @@ r_cs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
       df2list(x)%>%furrr::future_map(function(x)purrr::invoke(fun,x))
     }
     extract_fitness=function(newest_fit,primary_out){
-      map_dbl(newest_fit,function(x)x%>%magrittr::extract2(primary_out))
+      purrr::map_dbl(newest_fit,function(x)x%>%magrittr::extract2(primary_out))
     }
     
   }
