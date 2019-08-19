@@ -273,6 +273,10 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
       x=cbind(x_cont,x_disc,x_bin)
       df2list(x)%>%furrr::future_map(function(x)purrr::invoke(fun,x))  }
     
+    extract_fitness=function(newest_fit,primary_out){
+      purrr::map_dbl(newest_fit,function(x)x%>%magrittr::extract2(primary_out))
+    }
+      
     
   }
   
@@ -282,9 +286,10 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
   disc_x_host=egg(n,disc_bnd)
   bin_x_host=egg(n,bin_bnd)
   
-#  browser()
+# browser()
   #====================================Main Program==============================
-  cat("=================Starting iteration=============== \n")
+ all_res=list() 
+ cat("=================Starting iteration=============== \n")
   for(i in seq(iter_max)){
     #Get cuckoo egg
     seed=rnorm(1)
@@ -301,30 +306,56 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     x_newest=empty_nest(x_new$cont,x_new$disc,x_new$bin,pa,
                         cont_bnd,disc_bnd,bin_bnd
                         )
-    x_newest_all=cbind(x_newest$cont,x_newest$disc,x_newest$bin)
-    newest_fit=fitness(x_newest$cont,x_newest$disc,x_newest$bin,fun)
+    #x_newest_all=cbind(x_newest$cont,x_newest$disc,x_newest$bin)
+    #newest_fit=fitness(x_newest$cont,x_newest$disc,x_newest$bin,fun)
     
+    
+    #find current best
+    
+    if(!is.null(primary_out)){
+      
+      cat("evaluating current fitnees value... ")
+      x_newest_disc=disc_trans(x_newest$disc,seed)
+      x_newest_bin=binary_trans(x_newest$bin,seed)
+      newest_fit1=fitness1(x_newest$cont,x_newest_disc,x_newest_bin,fun1)
+      cat("done \n\n")
+      newest_fit=extract_fitness(newest_fit1,primary_out)
+      newest_fit_all=newest_fit1%>%
+        magrittr::extract2(which.max(newest_fit))
+      x_newest_fin=cbind(x_newest$cont,x_newest_disc,x_newest_bin)
+      best=list("fitness"=newest_fit%>%
+                  magrittr::extract(which.max(newest_fit)),
+                "best_solution"=x_newest_fin%>%slice(which.max(newest_fit)))
+      
+      temp_res=list("x_host_cont"=x_newest$cont,
+                    "x_host_disc"=x_newest$disc,
+                    "x_host_bin"=x_newest$bin,
+                    "best"=best,"iteration"=i)
+      
+      all_res[[i]]=list("temp_rest"=temp_res,"all_fit"=newest_fit_all)
+    }else{
+      cat("evaluating current fitnees value... ")
+      x_newest_disc=disc_trans(x_newest$disc,seed)
+      x_newest_bin=binary_trans(x_newest$bin,seed)
+      newest_fit=fitness(x_newest$cont,x_newest_disc,x_newest_bin,fun)
+      cat("done \n\n")
+      x_newest_fin=cbind(x_newest$cont,x_newest_disc,x_newest_bin)
+      best=list("fitness"=newest_fit%>%
+                  magrittr::extract(which.max(newest_fit)),
+                "best_solution"=x_newest_fin%>%slice(which.max(newest_fit)))
+      
+      temp_res=list("x_host_cont"=x_newest$cont,
+                    "x_host_disc"=x_newest$disc,
+                    "x_host_bin"=x_newest$bin,
+                    "best"=best,"iteration"=i)      
+      all_res[[i]]=temp_res
+    }
     
     # keep best solution
     cont_x_host=x_newest$cont
     disc_x_host=x_newest$disc
     bin_x_host=x_newest$bin
     
-    
-    #find current best
-    best=list("fitness"=newest_fit[which.max(newest_fit)],
-              "best_solution"=x_newest_all[which.max(newest_fit),])
-    
-    temp_res=list("cont_host"=cont_x_host,
-                  "disc_host"=disc_x_host,
-                  "bin_host"=bin_x_host,
-                  "best"=best,"iteration"=i)
-    if(!is.null(primary_out)){
-      newest_fit_all=fitness1(x_newest,fun1)[[which.max(newest_fit)]]
-      all_res[[i]]=list("temp_rest"=temp_res,"all_fit"=newest_fit_all)
-    }else{
-      all_res[[i]]=temp_res
-    }
     
     if(save){
       
@@ -347,18 +378,9 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
   if(parallel){
     future::plan(future::sequential())
   }
-  #====================================Give Solution Name==============================
-  
-  if( !is.null( names(cont_bnd[[1]]) )&
-      is.null( names(disc_bnd[[1]]) )&
-      is.null(name_d))
-  {
-    nm=c(names(cont_bnd[[1]]),names(disc_bnd[[1]]),name_d)
-    colnames(best$best_solution)=nm
-  }
-  
+  #====================================SOutput==============================   
   if(!is.null(primary_out)){
-  fin_result=list("Best_Result"=best,"All_Result"=all_res)
+    fin_result=list("Best_Result"=best,"All_Result"=all_res)
   }else{
     fin_result=best
   }
