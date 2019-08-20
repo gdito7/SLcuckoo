@@ -8,7 +8,7 @@ method_consLS=function()
                                      obsWeights, control, verbose, ...) {
                 cvRisk <- apply(Z, 2, function(x) mean(obsWeights *(x - Y)^2))
                 names(cvRisk) <- libraryNames
-                source("cons_ls.R")
+#                source("cons_ls.R")
                 fit_ls <- cons_ls(sqrt(obsWeights) * Z, sqrt(obsWeights) * Y)
                 if (verbose) {
                   message(paste("Constrained least squares convergence:", 
