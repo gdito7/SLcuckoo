@@ -1,30 +1,69 @@
+---
+title: "Cuckoo Search Super Learner"
+output: html_notebook
+---
+
+
+##Importing Package
+required package:
+*CVXR
+*furrr
+*tidyverse
+*progress
+```{r}
 library(dplyr)
 library(mlr)
+library(SuperLearner)
+```
 
-list_files=list.files("dataset/",all.files=F)
-dta=purrr::map(list_files,function(lf){
-  readr::read_csv(stringr::str_c("dataset/",lf))
+##Source Files
+Sourcce files are downloaded from github
+```{r}
+site="https://raw.githubusercontent.com/gdito7/SLcuckoo/master/"
+source(paste0(site,"SL_mlr.R"))
+source(paste0(site,"new_metalearner.R"))
+source(paste0(site,"SL_Adds_on.R"))
+source(paste0(site,"r_mcs.R"))
+source(paste0(site,"base_learner.R"))
+```
+
+## Data
+Data are downloaded from github
+```{r message=FALSE}
+files_github=function(site,name_file){
+  paste0(site,name_file)
+}
+site_files="https://raw.githubusercontent.com/gdito7/SLcuckoo/master/dataset/"
+name_files=c("Breast%20Cancer.csv","Dermatology.csv","Heart%20Cleaveland.csv",
+             "heart-statlog.csv","Hepatitis.csv","Lung%20Cancer.csv",
+             "lymphography.csv","Pima%20Indian%20diabetes.csv")
+list_files=files_github(site_files,name_files)
+
+dta=purrr::map(list_files[-c(2,6,7)],function(lf){
+  readr::read_csv(lf)
 }
 )
-names_data=stringr::str_remove(list_files,".csv")
+
+```
+In below we are deciding the target of data
+```{r}
 targets=c("Class","class","Num","class"
           ,"y","class","class","Outcome")
-targets_class=purrr::map(seq_along(targets),function(i){
-  dta[[i]]%>%count(.dots=targets[i])
-})
-names(targets_class)=names_data
-targets_class
-
-dta_fix=dta[-c(2,6,7)]
-targets_fix=targets[-c(2,6,7)]
-names_data_fix=names_data[-c(2,6,7)]
-
+targets=targets[-c(2,6,7)]
 postive_class=c("recurrence-events","sick",
                 "present","die",1)
-dta_fin=purrr::map(seq_along(dta_fix), 
+names_data=c("Breast Cancer","Dermatology","Heart Cleaveland",
+             "heart-statlog","Hepatitis.csv","Lung Cancer",
+             "lymphography","Pima Indian diabetes")
+names_data=names_data[-c(2,6,7)]
+
+```
+The codes are for fix small number category
+```{r}
+dta_fin=purrr::map(seq_along(dta), 
                    function(i){
-                     res=dta_fix[[i]]%>%mutate(!!targets_fix[i]:=
-                                                 ifelse(get(targets_fix[i])==
+                     res=dta[[i]]%>%mutate(!!targets[i]:=
+                                                 ifelse(get(targets[i])==
                                                           postive_class[i],1,0))%>%
                        mutate_if(is.character,factor)%>%na.omit
                      
@@ -54,22 +93,11 @@ dta_fin=purrr::map(seq_along(dta_fix),
                    }
 )
 
+```
 
-
-
-
-library(SuperLearner)
-source("SL_mlr.R")
-source("new_metalearner.R")
-source("SL_Adds_on.R")
-source("r_mcs.R")
-
-#============================== Base Learner =====================================
-source("base_learner.R")
-
-#getMlrOptions()
+##Define Base Learner
+```{r}
 configureMlr(show.learner.output = FALSE, show.info = FALSE)
-
 
 base1 = c("classif.ctree",
           "classif.C50","classif.J48","classif.rpart","classif.naiveBayes",
@@ -77,9 +105,9 @@ base1 = c("classif.ctree",
 
 base_lrn1=stringr::str_c(base1,"_1")
 
-
-
-
+```
+## Define function Cuckoo Search Super Learner
+```{r}
 result_SL2=function(j){
 band_cont=list(par11=c(0.05,0.99),par31=c(0.01,0.5),par51=c(0,1000),
                par62=c(0.0001,0.5))
@@ -175,9 +203,10 @@ opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
       primary_out = 1)
 
 }
+```
 
+##Train the first data: Breast Cancer
+```{r}
 result_SL2(1)
-
-fin_resSL1=data.frame(name=names_data_fix,accuracy=
-                        purrr::map_dbl(result_SL1,function(i) i$final_prediction))
+```
 
