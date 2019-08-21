@@ -21,7 +21,7 @@ Sourcce files are downloaded from github
 ```{r}
 site="https://raw.githubusercontent.com/gdito7/SLcuckoo/master/"
 source(paste0(site,"SL_mlr.R"))
-sourcce(paste0(site,"cons_ls.R"))
+source(paste0(site,"cons_ls.R"))
 source(paste0(site,"new_metalearner.R"))
 source(paste0(site,"SL_Adds_on.R"))
 source(paste0(site,"r_mcs.R"))
@@ -189,7 +189,7 @@ modSL2=function(Ytrain,Xtrain){
 
 
 
-  dta_SL=SL_crossval(dta_fin[[j]],targets_fix[j])
+  dta_SL=SL_crossval(dta_fin[[j]],targets[j])
   
 #  tictoc::tic("Super Learner")
   #tictoc::tic(stringr::str_c("Super Learner without ",base1[c(6,8)]))
@@ -200,14 +200,18 @@ modSL2=function(Ytrain,Xtrain){
 }
 
 opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
-      name_bin_bnd = name_bin_band,n=10,alpha=0.1,iter_max = 2,
-      primary_out = 1)
+      name_bin_bnd = name_bin_band,n=7,alpha=0.01,iter_max = 50,
+      primary_out = 1,save=T,save_files=paste0(names_data[2],"_mcs_res.rds"))
 
 }
 ```
 
 ## Train the first data: Breast Cancer
 ```{r}
-result_SL2(1)
+tictoc::tic()
+set.seed(21)
+res_cuckoo=SLresult_SL2(1)
+tictoc::toc()
+saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
 ```
 
