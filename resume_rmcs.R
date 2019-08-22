@@ -287,6 +287,8 @@ resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,
   
   
   #====================================Main Program==============================
+  all_res=list() 
+  cat("=================Starting iteration=============== \n")
   
   for(i in seq(rmcs_files$iteration+1,iter_max)){
     #Get cuckoo egg

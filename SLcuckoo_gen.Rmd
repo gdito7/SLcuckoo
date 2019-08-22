@@ -221,6 +221,14 @@ saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
 ```{r}
 source(paste0(site,"resume_rmcs.R"))
 result_SL2_resume=function(j){
+band_cont=list(par11=c(0.05,0.99),par31=c(0.01,0.5),par51=c(0,1000),
+               par62=c(0.0001,0.5))
+band_disc=list(par12=c(5,150),par13=c(1,100),par21=c(1,100),
+               par32=c(1,100),
+               par41=c(5,150),par42=c(1,30),par61=c(1,30),
+               par81=c(1,100),par91=c(2,100))
+
+name_bin_band=c("par22","meta1","meta2",stringr::str_c("base_learner",1:9))
 
 cuckoo_SL=function(par11,par12,par13,par21,par22,par31,par32,
          par41,par42,par51,par61,par62,par81,par91,meta1,meta2,...)
@@ -300,8 +308,8 @@ modSL2=function(Ytrain,Xtrain){
   SLperformance(trainSL2,measureACC,"all")
 
 }
-
-opt_cuckoo_SL=resume_rmcs(rmcs_files=paste0(names_data[j],"_mcs_res.rds"),cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
+rds_files=readRDS(paste0(names_data[j],"_mcs_res.rds"))
+opt_cuckoo_SL=resume_rmcs(rmcs_files=rds_files,cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
       name_bin_bnd = name_bin_band,n=7,alpha=1,iter_max = 50,
       primary_out = 1,save=T,save_files=paste0(names_data[j],"_mcs_res.rds"))
 
