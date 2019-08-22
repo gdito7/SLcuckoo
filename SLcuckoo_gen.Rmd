@@ -200,8 +200,8 @@ modSL2=function(Ytrain,Xtrain){
 }
 
 opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
-      name_bin_bnd = name_bin_band,n=7,alpha=0.01,iter_max = 50,
-      primary_out = 1,save=T,save_files=paste0(names_data[2],"_mcs_res.rds"))
+      name_bin_bnd = name_bin_band,n=7,alpha=1,iter_max = 50,
+      primary_out = 1,save=T,save_files=paste0(names_data[j],"_mcs_res.rds"))
 
 }
 ```
@@ -210,8 +210,113 @@ opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
 ```{r}
 tictoc::tic()
 set.seed(21)
-res_cuckoo=SLresult_SL2(1)
+res_cuckooSL=result_SL2(1)
 tictoc::toc()
 saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
+```
+====================================================================================
+
+## Resuming
+### Define function Cuckoo Search Super Learner
+```{r}
+source(paste0(site,"resume_rmcs.R"))
+result_SL2_resume=function(j){
+
+cuckoo_SL=function(par11,par12,par13,par21,par22,par31,par32,
+         par41,par42,par51,par61,par62,par81,par91,meta1,meta2,...)
+{
+
+base_param=list(
+  ctree=list(testtype="Bonferroni",
+             mincriterion=par11,
+             minsplit=par12,
+             minbucket=round(par12/3),
+             maxdepth=par13)
+  ,
+  C50=list(rules=F,trials=par21,winnow=as.logical(par22),
+           fuzzyThreshold=TRUE,
+           earlyStopping=T)
+  ,
+  J48=list(C=par31,M=par32)
+  ,
+  rpart=list(minsplit = par41,
+             minbucket = round(par41/3),
+             maxdepth = par42)
+  ,
+  naiveBayes=list(laplace=par51)
+  ,
+  nnet=list(size=par61,
+            decay=par62),
+  logreg=list(model=T),
+  OneR=list(B=par81),
+  IBk=list(K=par91)
+)
+SL_base1save=list()
+for(i in seq_along(base1)){
+  SL_base1=  create.Learner("SL.mlr",
+                            params = list(learner=base1[i],
+                                          par.vals= base_param[i]),
+                            name_prefix = base1[i])
+  SL_base1save[[i]]=SL_base1
+}
+
+
+nbase=c(...)
+if(all(nbase==0)){
+  nbase[sample(seq_along(nbase),1)]=1
+}
+
+lbl=nbase*seq_along(base_lrn1)
+base_lrn2=base_lrn1[lbl[lbl!=0]]
+
+metas=c(meta1,meta2)
+if(any(duplicated(metas))){
+  metas[sample(seq_along(metas),1)]=ifelse(
+    metas[sample(seq_along(metas),1)]==1,0,1)
+}
+   
+
+meta_lrn=c("method_consLS","method_NNRidge")
+meta_lrn2=meta_lrn[metas[metas!=0]]
+modSL2=function(Ytrain,Xtrain){
+
+   SuperLearner(Y=Ytrain,X=Xtrain,family = binomial(),
+               SL.library = base_lrn2,method=meta_lrn2,
+               verbose = F,
+               cvControl = list(V = 10L,
+                                stratifyCV = FALSE,
+                                shuffle = TRUE))
+
+}
+
+
+
+  dta_SL=SL_crossval(dta_fin[[j]],targets[j])
+  
+#  tictoc::tic("Super Learner")
+  #tictoc::tic(stringr::str_c("Super Learner without ",base1[c(6,8)]))
+  trainSL2=SL_train(modSL2,dta_SL,verbose = F)
+#  tictoc::toc()
+  SLperformance(trainSL2,measureACC,"all")
+
+}
+
+opt_cuckoo_SL=resume_rmcs(rmcs_files=paste0(names_data[j],"_mcs_res.rds"),cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
+      name_bin_bnd = name_bin_band,n=7,alpha=1,iter_max = 50,
+      primary_out = 1,save=T,save_files=paste0(names_data[j],"_mcs_res.rds"))
+
+}
+
+
+```
+### Train the first data: Breast Cancer```
+```{r}
+tictoc::tic()
+set.seed(21)
+res_cuckooSL=result_SL2_resume(1)
+tictoc::toc()
+saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
+
+
 ```
 
