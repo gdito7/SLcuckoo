@@ -1,6 +1,6 @@
 #==================== Super Learner Cross-validation=============================
 SL_crossval=function(dta,target,folds=10){
-  browser()
+
   index_crossval=caret::createFolds(as.factor(dta%>%pull(target)),k=folds,returnTrain = F)
   Xtrain=purrr::map(seq_along(index_crossval),
                     function(i){
