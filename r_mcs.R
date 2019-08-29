@@ -1,6 +1,6 @@
 r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
                Beta=1.5,iter_max=250,verbose=T,parallel=F,num_cores=NULL,
-               primary_out=NULL,save=F,save_files="mcs_res.rds"){
+               primary_out=NULL,save=F,save_files="mcs_res.rds",online=F){
   
   #====================================Set Parallel==============================
   if(parallel){
@@ -360,6 +360,10 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     if(save){
       
       saveRDS(temp_res,save_files)
+      if(online){
+        googledrive::drive_upload(save_files,
+                                  path = save_files,overwrite = T)
+      }
     }
     
     
