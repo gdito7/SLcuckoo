@@ -363,7 +363,8 @@ resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,
       if(online){
         httr::set_config(httr::config(http_version = 1.1))
         googledrive::drive_upload(save_files,
-                                  path = save_files,overwrite = T)
+                                  path = save_files,overwrite = T,
+                                  verbose=FALSE)
       }
     }
     
