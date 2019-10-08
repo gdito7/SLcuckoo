@@ -51,10 +51,10 @@ In below we are deciding the target of data
 targets=c("Class","class","Num","class"
           ,"y","class","class","Outcome")
 targets=targets[-c(2,6,7)]
-postive_class=c("recurrence-events","sick",
+postive_class=c("malignant","sick",
                 "present","die",1)
 names_data=c("Breast Cancer","Dermatology","Heart Cleaveland",
-             "heart-statlog","Hepatitis.csv","Lung Cancer",
+             "heart-statlog","Hepatitis","Lung Cancer",
              "lymphography","Pima Indian diabetes")
 names_data=names_data[-c(2,6,7)]
 
@@ -102,7 +102,8 @@ configureMlr(show.learner.output = FALSE, show.info = FALSE)
 
 base1 = c("classif.ctree",
           "classif.C50","classif.J48","classif.rpart","classif.naiveBayes",
-          "classif.nnet","classif.logreg","classif.OneR","classif.IBk")
+          "classif.nnet",
+          "classif.logreg","classif.OneR","classif.IBk")
 
 base_lrn1=stringr::str_c(base1,"_1")
 
@@ -111,7 +112,8 @@ base_lrn1=stringr::str_c(base1,"_1")
 ```{r}
 result_SL2=function(j){
 band_cont=list(par11=c(0.05,0.99),par31=c(0.01,0.5),par51=c(0,1000),
-               par62=c(0.0001,0.5))
+               par62=c(0.0001,0.5)
+               )
 band_disc=list(par12=c(5,150),par13=c(1,100),par21=c(1,100),
                par32=c(1,100),
                par41=c(5,150),par42=c(1,30),par61=c(1,30),
@@ -143,8 +145,8 @@ base_param=list(
   ,
   naiveBayes=list(laplace=par51)
   ,
-  nnet=list(size=par61,
-            decay=par62),
+#  nnet=list(size=par61,
+#            decay=par62),
   logreg=list(model=T),
   OneR=list(B=par81),
   IBk=list(K=par91)
@@ -181,8 +183,8 @@ modSL2=function(Ytrain,Xtrain){
    SuperLearner(Y=Ytrain,X=Xtrain,family = binomial(),
                SL.library = base_lrn2,method=meta_lrn2,
                verbose = F,
-               cvControl = list(V = 10L,
-                                stratifyCV = FALSE,
+               cvControl = list(V = 5L,
+                                stratifyCV = T,
                                 shuffle = TRUE))
 
 }
@@ -195,7 +197,10 @@ modSL2=function(Ytrain,Xtrain){
   #tictoc::tic(stringr::str_c("Super Learner without ",base1[c(6,8)]))
   trainSL2=SL_train(modSL2,dta_SL,verbose = F)
 #  tictoc::toc()
-  SLperformance(trainSL2,measureACC,"all")
+  measureGMEAN1=function(truth,response){
+    measureGMEAN(truth,response,positive = 1,negative = 0)
+  }
+  SLperformance(trainSL2,measureGMEAN1,"all")
 
 }
 
@@ -209,8 +214,8 @@ opt_cuckoo_SL=r_mcs(cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
 ## Train the first data: Breast Cancer
 ```{r}
 tictoc::tic()
-set.seed(21)
-res_cuckooSL=result_SL2(1)
+set.seed(77)
+res_cuckooSL= suppressWarnings(result_SL2(1))
 tictoc::toc()
 saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
 ```
@@ -291,7 +296,7 @@ modSL2=function(Ytrain,Xtrain){
    SuperLearner(Y=Ytrain,X=Xtrain,family = binomial(),
                SL.library = base_lrn2,method=meta_lrn2,
                verbose = F,
-               cvControl = list(V = 10L,
+               cvControl = list(V = 5L,
                                 stratifyCV = FALSE,
                                 shuffle = TRUE))
 
@@ -305,13 +310,16 @@ modSL2=function(Ytrain,Xtrain){
   #tictoc::tic(stringr::str_c("Super Learner without ",base1[c(6,8)]))
   trainSL2=SL_train(modSL2,dta_SL,verbose = F)
 #  tictoc::toc()
-  SLperformance(trainSL2,measureACC,"all")
+  measureGMEAN1=function(truth,response){
+    measureGMEAN(truth,response,positive = 1,negative = 0)
+}
+  SLperformance(trainSL2,measureGMEAN1,"all")
 
 }
 rds_files=readRDS(paste0(names_data[j],"_mcs_res.rds"))
-opt_cuckoo_SL=resume_rmcs(rmcs_files=rds_files,cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
+opt_cuckoo_SL=suppressWarnings(resume_rmcs(rmcs_files=rds_files,cuckoo_SL,cont_bnd = band_cont,disc_bnd = band_disc,
       name_bin_bnd = name_bin_band,n=7,alpha=1,iter_max = 50,
-      primary_out = 1,save=T,save_files=paste0(names_data[j],"_mcs_res.rds"))
+      primary_out = 1,save=T,save_files=paste0(names_data[j],"_mcs_res.rds")))
 
 }
 
@@ -320,11 +328,10 @@ opt_cuckoo_SL=resume_rmcs(rmcs_files=rds_files,cuckoo_SL,cont_bnd = band_cont,di
 ### Train the first data: Breast Cancer```
 ```{r}
 tictoc::tic()
-set.seed(21)
-res_cuckooSL=result_SL2_resume(1)
+set.seed(7)
+res_cuckooSL= suppressWarnings(result_SL2_resume(1))
 tictoc::toc()
 saveRDS(res_cuckoo,file =paste0(names_data[1],"_final_CSSL.rds"))
 
 
 ```
-
