@@ -361,11 +361,17 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
       
       saveRDS(temp_res,save_files)
       if(online){
-        httr::set_config(httr::config(http_version = 1.1))
-        googledrive::drive_upload(save_files,
-                                  path = save_files,overwrite = T,
-                                  verbose=FALSE)
-      }
+        httr::set_config(httr::config(http_version = 0))
+        tryCatch(googledrive::drive_upload(save_files,
+                                           path = save_files,overwrite = T,
+                                           verbose=FALSE),
+                 error = function(e){
+                   httr::set_config(httr::config(http_version = 0))
+                   googledrive::drive_upload(save_files,
+                                             path = save_files,overwrite = T,
+                                             verbose=FALSE)
+                 } 
+        )      }
     }
     
     
