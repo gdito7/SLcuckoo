@@ -1,7 +1,8 @@
-resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
+resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
                      Beta=1.5,iter_max=250,verbose=T,parallel=F,num_cores=NULL,
                      primary_out=NULL,save=F,save_files="mcs_res.rds",online=F){
   
+  rmcs_files=rmcs_files1[[length(rmcs_files1)]]
   #====================================Set Parallel==============================
   if(parallel){
     

@@ -7,6 +7,7 @@ library(SuperLearner)
 source("SL_mlr.R")
 source("SL_Adds_on.R")
 source("r_dcs.R")
+source("resume_dcs.R")
 
 list_files=c(37,1487,40994,29,31,1480, 1464,
              1494,1063,1068)
@@ -75,7 +76,7 @@ dtaSL2=map(seq_along(dta),function(i){
   return(a2)
 })
 
-result_CSF=function(j){
+result_CSF=function(j,status="first"){
   band_tree1=lapply(seq(10),function(i) c(5, floor(nrow(dtaSL2[[j]])*(4/5)) ))
   names(band_tree1)=paste0("par_tree",seq(10))
   
@@ -113,14 +114,27 @@ result_CSF=function(j){
     result=list("perf"=res$Table$Ave[1],"folds_perf"=res$Risk.SL)
     return(result)
   }
-  
-  opt_cuckoo_SF=r_dcs(cuckoo_SF,bnd = band_tree1,n=20,alpha=0.01,iter_max = 50,
+  if(status=="first"){
+    
+  opt_cuckoo_SF=r_dcs(cuckoo_SF,bnd = band_tree1,n=15,alpha=0.01,iter_max = 50,
                       primary_out = 1,save=T,pa=0.25,save_files=paste0(
                         "/cloud/project/Super Tree Result/ ",
-                        names_dataset[j],
+                        names_dataset[-c(2,8)][j],
                         "_dcs_res_SF2.rds"),
                       online=F)
+  }else{
+    rds_files=readRDS(paste0("/cloud/project/Super Tree Result/ ",
+                             names_dataset[-c(2,8)][j],"_dcs_res_SF2.rds"))
+    opt_cuckoo_SF=resume_dcs(rds_files,cuckoo_SF,
+                             bnd = band_tree1,n=15,alpha=0.01,iter_max = 50,
+                             pa=0.25,
+                             primary_out = 1,save=T,online=F,
+                             save_files=paste0("/cloud/project/Super Tree Result/ ",
+                                               names_dataset[-c(2,8)][j],
+                                               "_dcs_res_SF2.rds"))
+  }
+  return(opt_cuckoo_SF)
 }
 
 set.seed(1710)
-fin_CSF1=result_CSF(1)
+fin_CSF1=result_CSF(1,status = "resume")

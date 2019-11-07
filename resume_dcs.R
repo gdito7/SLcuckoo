@@ -1,4 +1,4 @@
-r_dcs=function(rcs_files,fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
+resume_dcs=function(rcs_files1,fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
                verbose=T,parallel=F,num_cores=NULL,save=F,
                primary_out=NULL,online=F,
                save_files="dcs_res.rds"){
@@ -11,7 +11,7 @@ r_dcs=function(rcs_files,fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
   # iter_max is maximum iteration
   # verbose will show result each iteration when set to TRUE
   
-  
+  rcs_files=rcs_files1[[length(rcs_files1)]]
   #====================================Set Parallel==============================
   if(parallel){
     
