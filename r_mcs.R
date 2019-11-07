@@ -348,7 +348,7 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
                     "x_host_disc"=x_newest$disc,
                     "x_host_bin"=x_newest$bin,
                     "best"=best,"iteration"=i)      
-      all_res[[i]]=temp_res
+      all_res[[i]]=list("temp_rest"=temp_res)
     }
     
     # keep best solution
@@ -359,7 +359,7 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     
     if(save){
       
-      saveRDS(temp_res,save_files)
+      saveRDS(all_res,save_files)
       if(online){
         httr::set_config(httr::config(http_version = 0))
         tryCatch(googledrive::drive_upload(save_files,

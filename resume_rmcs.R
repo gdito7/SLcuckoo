@@ -281,16 +281,16 @@ resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,
   }
   
   #====================================Generate initial n host nest==============================
-  cont_x_host=rmcs_files$x_host_cont
-  disc_x_host=rmcs_files$x_host_disc
-  bin_x_host=rmcs_files$x_host_bin
+  cont_x_host=rmcs_files$temp_rest$x_host_cont
+  disc_x_host=rmcs_files$temp_rest$x_host_disc
+  bin_x_host=rmcs_files$temp_rest$x_host_bin
   
   
   #====================================Main Program==============================
   all_res=list() 
   cat("=================Starting iteration=============== \n")
   
-  for(i in seq(rmcs_files$iteration+1,iter_max)){
+  for(i in seq(rcs_files$temp_rest$iteration+1,iter_max)){
     #Get cuckoo egg
     seed=rnorm(1)
     x_cuckoo=cuckoo_egg(cont_x_host,disc_x_host,bin_x_host,
@@ -348,7 +348,7 @@ resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,
                     "x_host_disc"=x_newest$disc,
                     "x_host_bin"=x_newest$bin,
                     "best"=best,"iteration"=i)      
-      all_res[[i]]=temp_res
+      all_res[[i]]=list("temp_rest"=temp_res)
     }
     
     # keep best solution
@@ -359,7 +359,7 @@ resume_rmcs=function(rmcs_files,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,
     
     if(save){
       
-      saveRDS(temp_res,save_files)
+      saveRDS(all_res,save_files)
       if(online){
         httr::set_config(httr::config(http_version = 0))
        tryCatch(googledrive::drive_upload(save_files,

@@ -1,7 +1,14 @@
 #==================== Super Learner Cross-validation=============================
-SL_crossval=function(dta,target,folds=10){
-  
+SL_crossval=function(dta,target,folds=10,fixed=FALSE,index=NULL){
+  if(fixed){
+   if(is.null(index)){
+     stop("index must be not NULL when fixed=TRUE")
+   }else{
+     index_crossval=index
+   }
+  }else{
   index_crossval=caret::createFolds(as.factor(dta%>%pull(target)),k=folds,returnTrain = F)
+  }
   Xtrain=purrr::map(seq_along(index_crossval),
                     function(i){
                       index=index_crossval[[i]]
@@ -92,7 +99,7 @@ predict_SuperLearner=function (object, newdata, X = NULL, Y = NULL, onlySL = FAL
 
 #====================Training Super Learner===================================
 
-SL_train=function(SLmodel,dta,verbose=T,...){
+SL_train=function(SLmodel,dta,verbose=T,pkg="mlr",...){
   
   
   mod=purrr::map(seq_along(dta$Ytrain),
@@ -110,10 +117,18 @@ SL_train=function(SLmodel,dta,verbose=T,...){
                    
                  })
   # browser()
+  if(pkg=="mlr"){
   coefSL=purrr::map(seq_along(mod),function(i) coef(mod[[i]]))
   pred=purrr::map(seq_along(mod),function(i){
     predict_SuperLearner(mod[[i]],dta$Xtest[[i]])
   } )
+  }else{
+    coefSL=purrr::map(seq_along(mod),function(i) coef(mod[[i]]))
+    pred=purrr::map(seq_along(mod),function(i){
+      predict.SuperLearner(mod[[i]],dta$Xtest[[i]])
+    } )
+    
+  }
   return(list("prediction"=pred,"coef_SL"=coefSL,"truth"=dta$Ytest))
 }
 

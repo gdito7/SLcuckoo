@@ -1,5 +1,5 @@
 r_cs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
-              verbose=T,parallel=F,num_cores=NULL,primary_out=NULL,save=F,
+              verbose=T,parallel=F,num_cores=NULL,primary_out=NULL,save=F,online=F,
               save_files="cs_res.rds"){
   # fun is objective function
   # bnd is bound of solutions (eggs)
@@ -191,10 +191,25 @@ r_cs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
       
       temp_res=list("x_host"=x_newest,"best"=best,"iteration"=i)
       
-      all_res[[i]]=temp_res
+      all_res[[i]]=list("temp_rest"=temp_res)
     }
     
-    if(save){saveRDS(temp_res,save_files)}
+    if(save){
+      saveRDS(all_res,save_files)
+      if(online){
+        httr::set_config(httr::config(http_version = 0))
+        tryCatch(googledrive::drive_upload(save_files,
+                                           path = save_files,overwrite = T,
+                                           verbose=FALSE),
+                 error = function(e){
+                   httr::set_config(httr::config(http_version = 0))
+                   googledrive::drive_upload(save_files,
+                                             path = save_files,overwrite = T,
+                                             verbose=FALSE)
+                 } 
+        )      }
+      
+      }
     
     # keep best solution
     x_host=x_newest

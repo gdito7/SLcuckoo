@@ -1,6 +1,7 @@
-r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
-               verbose=T,parallel=F,num_cores=NULL,
-               primary_out=NULL,save=F,save_files="dcs_res.rds",online=F){
+r_dcs=function(rcs_files,fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
+               verbose=T,parallel=F,num_cores=NULL,save=F,
+               primary_out=NULL,online=F,
+               save_files="dcs_res.rds"){
   # fun is objective function
   # bnd is bound of solutions (eggs)
   # n is number of host nests
@@ -28,7 +29,7 @@ r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
   
   fitness=function(x,fun){
     df2list(x)%>%furrr::future_map_dbl(function(x)purrr::invoke(fun,x))
-     }
+  }
   #====================================Transformation==============================
   
   extract_dec=function(x){
@@ -143,7 +144,7 @@ r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
     clear = FALSE, width= 180,total = iter_max)
   #====================================Generate initial n host nest==============================  
   d=length(bnd)
-  x_host=egg(n)
+  x_host=rcs_files$temp_rest$x_host
   #====================================Output Options==============================
   if(is.null(primary_out)){
     x0_host=disc_trans(x_host,seed=1)
@@ -171,7 +172,7 @@ r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
   all_res=list()
   #====================================Main Program==============================
   cat("=================Starting iteration=============== \n")
-  for(i in seq(iter_max)){
+  for(i in seq(rcs_files$temp_rest$iteration+1,iter_max)){
     seed=set.seed(rnorm(1))
     #Get cuckoo egg
     x_cuckoo=cuckoo_egg(x_host,seed=seed)
@@ -242,7 +243,7 @@ r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
     
   }
   cat("====================Completed=================== \n")
-    
+  
   #====================================Stop Paralel==============================
   if(parallel){
     future::plan(future::sequential())
@@ -250,7 +251,7 @@ r_dcs=function(fun,bnd,n=25,pa=0.25,alpha=1,Beta=1.5,iter_max=250,
   
   #====================================Output==============================
   if(!is.null(primary_out)){
-  fin_result=list("Best_Result"=best,"All_Result"=all_res)
+    fin_result=list("Best_Result"=best,"All_Result"=all_res)
   }else{
     fin_result=best
   }
