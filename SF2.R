@@ -4,10 +4,11 @@ library(mlr)
 library(tidyverse)
 library(SuperLearner)
 
+site="https://raw.githubusercontent.com/gdito7/SLcuckoo/master/"
 source("SL_mlr.R")
 source("SL_Adds_on.R")
 source("r_dcs.R")
-source("resume_dcs.R")
+source(paste0(site,"resume_dcs.R"))
 
 list_files=c(37,1487,40994,29,31,1480, 1464,
              1494,1063,1068)

@@ -291,7 +291,7 @@ resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25
   all_res=list() 
   cat("=================Starting iteration=============== \n")
   
-  for(i in seq(rcs_files$temp_rest$iteration+1,iter_max)){
+  for(i in seq(rmcs_files$temp_rest$iteration+1,iter_max)){
     #Get cuckoo egg
     seed=rnorm(1)
     x_cuckoo=cuckoo_egg(cont_x_host,disc_x_host,bin_x_host,
