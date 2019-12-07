@@ -288,7 +288,7 @@ resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25
   
   
   #====================================Main Program==============================
-  all_res=list() 
+  all_res=rmcs_files1 
   cat("=================Starting iteration=============== \n")
   
   for(i in seq(rmcs_files$temp_rest$iteration+1,iter_max)){

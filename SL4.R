@@ -60,6 +60,20 @@ dta_task2=purrr::map(seq_along(target_data),function(i){
                 task00,"outTest"=holdout_index))
 }
 )
+
+dtaSL=map(seq_along(dta),function(i){
+  a=createDummyFeatures(dta[[i]]%>%select(-one_of(target_data[i])),method="reference")
+  #a=model.matrix(~.-1,dta[[i]])
+  y=createDummyFeatures(dta[[i]]%>%select(target_data[i]),method="reference")
+  colnames(y)=target_data[i]
+  a2=cbind(y,a)
+  #a1=as.data.frame(a)
+  colnames(a2)=make.names(colnames(a2))
+  #  a2=a1
+  #colnames(a2)[str_detect(colnames(a2),target_data[i])]=target_data[i]
+  return(a2)
+})
+
 dtaSL2=map(seq_along(dta),function(i){
   dta=dta[[i]][-dta_task2[[i]]$outTest,]
   a=createDummyFeatures(dta%>%select(-one_of(target_data[i])),method="reference")
@@ -120,6 +134,32 @@ tictoc::toc()
 return(list("CV"=mod,"Pred"=mod1))
 })
 saveRDS(SLmod1,"SuperLearner_fix.rds")
+
+coef_base=map(1:8,function(i){
+  readRDS("SuperLearner_fix.rds")[[i]]$CV$coef
+})%>%magrittr::set_names(names_dataset[-c(2,8)])
+openxlsx::write.xlsx(coef_base,"coef_SuperLearner_fix.xlsx")
+
+CV_base_import=map(1:8,function(i){
+  summary(readRDS("SuperLearner_fix.rds")[[i]]$CV)
+}
+)
+gc()
+CV_base=map_dfc(CV_base_import,function(SL) SL$Table[,2])%>%
+  magrittr::set_colnames(names_dataset[-c(2,8)])%>%
+  mutate(Model=c("SL_1","DSL_1",str_remove(list_lrn1,"classif.")))%>%
+  select(Model,1:8)
+
+openxlsx::write.xlsx(CV_base,"CV_base.xlsx")
+
+#SLmod1=readRDS("SuperLearner_fix.rds")
+
+pred_base_import1=map_dfc(SLmod1,function(i){
+  coef(i$Pred)
+}
+)%>%magrittr::set_colnames(names_dataset[-c(2,8)])
+openxlsx::write.xlsx(pred_base_import1,"coef_base_pred.xlsx")
+
 evalSL=function(SLmod1){
 predSL=map(seq_along(SLmod1),function(i){
   target=target_data[c(-2,-8)][i]
@@ -203,8 +243,10 @@ return(list("SL"=metric_SL,"base"=metric_Lib))
 
 
 fix_finSL=evalSL(SLmod1)
-rbind(cbind("name"="SL",fix_finSL$SL$auc),fix_finSL$base$auc)
-summary(SLmod1[[4]]$CV)
+fix_finSL1=map(1:4,function(i){
+rbind(cbind("name"="SuperLearner",fix_finSL$SL[[i]]),fix_finSL$base[[i]])
+})%>%magrittr::set_names(c("auc","gmean","recall","spec"))
+openxlsx::write.xlsx(fix_finSL1,"pred_base.xlsx")
 
 #======================famous Learner============================================
 
@@ -237,42 +279,11 @@ famous_res=purrr::map(seq_along(target_data[-c(2,8)]),function(i){
 })
 saveRDS(famous_res,"famous_fix.rds")
 
-famous_pred=purrr::map(seq_along(target_data[-c(2,8)]),function(i){      
-  configureMlr(show.learner.output = FALSE, show.info = FALSE)
-  lrns0 = lapply(famous_lrn1, makeLearner)
-  lrns0 = lapply(lrns0, setPredictType, "prob")
-  
-  cat(names_dataset[-c(2,8)][i],"\n")
-  rinst = dta_task2[-c(2,8)][[i]]$rinst
-
-  mod_base=lapply(lrns0,function(lrns){
-    tictoc::tic(lrns$id)
-    res=train(lrns,task = dta_task2[-c(2,8)][[i]]$task0)
-    tictoc::toc()
-    return(res)
-  })
-  res=do.call(rbind,map(mod_base,function(mod_base){
-  pred_base=predict(mod_base,task =  dta_task2[-c(2,8)][[i]]$task00)
-  perf_base=performance(pred = pred_base,measures = list(auc,gmean,tpr,tnr) )
-  return(perf_base)
-  }))%>%as.data.frame%>%mutate(learner=famous_lrn1)%>%select(learner,1:4)
-  res=list("pref_mod"=res)
-  return(res)
-})
-saveRDS(famous_pred,"famous_pred_fix.rds")
-fin_famous_pred=map(c("auc","gmean","tpr","tnr"),
-                    function(measure){
-                    map_dfc(famous_pred,function(famous_pred){
-  famous_pred$pref_mod%>%select(measure)
-})%>%magrittr::set_colnames(names_dataset[-c(2,8)])%>%
-  mutate(learner=famous_lrn1)%>%
-  select(learner,1:8)
-})%>%magrittr::set_names(c("auc","gmean","tpr","tnr"))
 
 
 
 
-SLmod2=purrr::map(seq_along(dtaSL2[-c(2,8)]),function(j){
+SLmod2=function(j){
   configureMlr(show.learner.output = FALSE, show.info = FALSE)
   target=target_data[c(-2,-8)][j]
   YY=dtaSL2[c(-2,-8)][[j]]%>%pull(target)
@@ -280,7 +291,7 @@ SLmod2=purrr::map(seq_along(dtaSL2[-c(2,8)]),function(j){
   cat(names_dataset[c(-2,-8)][j],"\n")
   
   SL_base1save=list()
-  for(i in seq_along(list_lrn1)){
+  for(i in seq_along(famous_lrn1)){
     SL_base1=  create.Learner("SL.mlr",
                               params = list(learner=famous_lrn1[i]
                                             #par.vals= base_param[i]),
@@ -291,26 +302,56 @@ SLmod2=purrr::map(seq_along(dtaSL2[-c(2,8)]),function(j){
   base_lrn1=stringr::str_c(famous_lrn1,"_1")
   tictoc::tic("CV")
   set.seed(1710)
-  mod=CV.SuperLearner(Y=YY,X=XX,family = binomial(),
-                      SL.library = base_lrn1,method="method.AUC",
-                      verbose = F,
-                      cvControl = list(validRows=dta_task2[-c(2,8)][[j]]$rinst$test.inds),
-                      innerCvControl = list(list(V = 10L,
-                                                 stratifyCV = TRUE,
-                                                 shuffle = TRUE))
+  mod=suppressWarnings(CV.SuperLearner(Y=YY,X=XX,family = binomial(),
+                                       SL.library = base_lrn1,method="method.AUC",
+                                       verbose = T,
+                                       cvControl = list(validRows=dta_task2[-c(2,8)][[j]]$rinst$test.inds),
+                                       innerCvControl = list(list(V = 10L,
+                                                                  stratifyCV = TRUE,
+                                                                  shuffle = TRUE))
+  )
   )
   
   tictoc::toc()
   tictoc::tic("Prediction")
   set.seed(1710)
-  mod1=SuperLearner(Y=YY,X=XX,family = binomial(),
-                    SL.library = base_lrn1,method="method.AUC",
-                    verbose = F,
-                    cvControl = list(list(V = 10L,
-                                          stratifyCV = TRUE,
-                                          shuffle = TRUE))
-  )
+  mod1=suppressWarnings(SuperLearner(Y=YY,X=XX,family = binomial(),
+                                     SL.library = base_lrn1,method="method.AUC",
+                                     verbose = F,
+                                     cvControl = list(list(V = 10L,
+                                                           stratifyCV = TRUE,
+                                                           shuffle = TRUE))
+  ))
   tictoc::toc()
   return(list("CV"=mod,"Pred"=mod1))
-})
-saveRDS(SLmod2,"FamousLearner_fix.rds")
+}
+
+
+index=8
+famous_mod=SLmod2(index)
+saveRDS(famous_mod,paste0("/cloud/project/SuperLearner/",
+       "FamousLearner_",names_dataset[-c(2,8)][index], ".rds")
+)
+
+
+
+CV_famous_import=map(1:8,function(i){
+ summary(readRDS(paste0("/cloud/project/SuperLearner/",
+                            "FamousLearner_",names_dataset[-c(2,8)][i], ".rds")
+  )$CV)
+  }
+  )
+
+coef_famous=map(1:8,function(i){
+  readRDS(paste0("/cloud/project/SuperLearner/",
+                 "FamousLearner_",names_dataset[-c(2,8)][i], ".rds"))$CV$coef
+})%>%magrittr::set_names(names_dataset[-c(2,8)])
+openxlsx::write.xlsx(coef_famous,"coef_famous.xlsx")
+
+gc()
+CV_famous=map_dfc(CV_famous_import,function(SL) SL$Table[,2])%>%
+  magrittr::set_colnames(names_dataset[-c(2,8)])%>%
+  mutate(Model=c("SL_2","DSL_2",str_remove(famous_lrn1,"classif.")))%>%
+  select(Model,1:8)
+
+openxlsx::write.xlsx(CV_famous,"CV_famous.xlsx")
