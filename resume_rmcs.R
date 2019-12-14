@@ -364,7 +364,7 @@ resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25
     
     if(save){
       toc_save=tictoc::toc()
-      save_time=toc_save$tic-toc_save$toc()
+      save_time=toc_save$toc-toc_save$tic
       all_res[[i]]$iter_time=save_time
       
       saveRDS(all_res,save_files)
