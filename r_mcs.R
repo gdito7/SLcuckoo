@@ -287,10 +287,14 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
   bin_x_host=egg(n,bin_bnd)
   
 # browser()
+  
   #====================================Main Program==============================
  all_res=list() 
  cat("=================Starting iteration=============== \n")
   for(i in seq(iter_max)){
+    if(save){
+      tictoc::tic()
+    }
     #Get cuckoo egg
     seed=rnorm(1)
     x_cuckoo=cuckoo_egg(cont_x_host,disc_x_host,bin_x_host,
@@ -358,7 +362,9 @@ r_mcs=function(fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25,alpha=1,
     
     
     if(save){
-      
+      toc_save=tictoc::toc()
+      save_time=toc_save$tic-toc_save$toc()
+      all_res[[i]]$iter_time=save_time
       saveRDS(all_res,save_files)
       if(online){
         httr::set_config(httr::config(http_version = 0))

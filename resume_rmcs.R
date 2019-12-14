@@ -292,6 +292,10 @@ resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25
   cat("=================Starting iteration=============== \n")
   
   for(i in seq(rmcs_files$temp_rest$iteration+1,iter_max)){
+    if(save){
+      tictoc::tic()
+    }
+    
     #Get cuckoo egg
     seed=rnorm(1)
     x_cuckoo=cuckoo_egg(cont_x_host,disc_x_host,bin_x_host,
@@ -359,6 +363,9 @@ resume_rmcs=function(rmcs_files1,fun,cont_bnd,disc_bnd,name_bin_bnd,n=25,pa=0.25
     
     
     if(save){
+      toc_save=tictoc::toc()
+      save_time=toc_save$tic-toc_save$toc()
+      all_res[[i]]$iter_time=save_time
       
       saveRDS(all_res,save_files)
       if(online){
